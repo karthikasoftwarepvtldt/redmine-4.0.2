@@ -1,0 +1,40 @@
+<%= stylesheet_link_tag 'wk-time', :plugin => "redmine_wktime" %>
+<div class="autoscroll">
+	<table class="list time-entries">
+		<thead>
+			<tr>
+				<%= sort_header_tag('lead_name', :caption => l(:field_name), class: "lbl-txt-align") %>
+                <%= sort_header_tag('status', :caption => l(:field_status), class: "lbl-txt-align") %>
+				<%= sort_header_tag('acc_name', :caption => l(:label_account_name), class: "lbl-txt-align") %>
+				<%= sort_header_tag('location_name', :caption => l(:label_location), class: "lbl-txt-align") %>
+				<th class="lbl-txt-align"><%= l(:label_work_phone) %></th>
+				<th class="lbl-txt-align"><%= l(:label_email) %></th>
+				<%= sort_header_tag('created_by_user_id', :caption => l(:field_status_modified_by), class: "lbl-txt-align") %>
+				<%= sort_header_tag('updated_at', :caption => l(:field_updated_on), class: "lbl-txt-align") %>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			<% @leadEntries.each do |entry| %>
+				<tr>
+					<td class="lbl-txt-align"><%=h entry.contact.name %></td>
+					<!-- <td class="lbl-txt-align"><%#= link_to entry.contact.last_name, url_for(:controller => controller_name, :action => 'show', :lead_id => entry.id,:address_id => entry.contact.address.blank? ? "" : entry.contact.address.id) %></td> -->
+					<td class="lbl-txt-align"><%=h getLeadStatusHash[entry.status] %></td>
+					<td class="lbl-txt-align"><%=h entry.account.blank? ? "" : entry.account.name %></td>
+					<td class="lbl-txt-align"><%=h entry.contact.location_id.blank? ? "" : entry.contact.location.name %></td>
+					<td class="lbl-txt-align"><%=h entry.contact.address.blank? ? "" : entry.contact.address.work_phone %></td>
+					<td class="lbl-txt-align"><%=h entry.contact.address.blank? ? "" : entry.contact.address.email %></td>
+					<td class="lbl-txt-align"><%=h entry.created_by_user.name(:firstname_lastname) %></td>
+					<td class="lbl-txt-align"><%=h entry.updated_at.localtime.strftime("%Y-%m-%d %H:%M:%S") %></td>
+					<td align="center">
+						<%= link_to image_tag('edit.png'), {:controller => controller.controller_name, :action => 'edit', :lead_id => entry.id,:address_id => entry.address.blank? ? "" : entry.address.id}, :title => l(:button_edit) %>
+						<% if controller.deletePermission %>
+							<%= link_to image_tag('delete.png'), {:controller => controller.controller_name, :action => 'destroy', :lead_id => entry.id, :tab => controller.controller_name},  :data => {:confirm => l(:text_are_you_sure)}, :method => :delete, :title => l(:button_delete) %>
+						<% end %>
+					</td>
+				</tr>
+			<% end %>
+		</tbody>
+	</table>
+</div>
+<span class="pagination"><%= pagination_links_full @entry_pages, @entry_count %></span>

@@ -1,0 +1,78 @@
+<%= javascript_include_tag 'wkpayroll', :plugin => "redmine_wktime" %>
+<%= stylesheet_link_tag 'wk-time', :plugin => "redmine_wktime" %>
+<style>
+.table-wrapper {
+	overflow-x:scroll;
+	margin-left: 260px;
+}
+th:first-child {
+	white-space: normal !important;
+	text-align: left;
+	left: 5px;
+	width: 260px;
+	position: absolute;
+}
+</style>
+<%= form_tag({}) do -%>	
+	<%= hidden_field_tag 'back_url', url_for(:controller => params[:controller], :action => params[:action]) %>
+	<% wktime_helper = Object.new.extend(WktimeHelper) %>
+	<% if (wktime_helper.validateERPPermission('A_TE_PRVLG')) %>
+
+		<%= form_tag({:controller => controller_name, :action => 'usrsettingsindex'}, :method => :get) do %>
+			<fieldset><legend><%= l(:label_filter_plural) %></legend>
+				<label for='status'><%= l(:field_status) %>:</label>
+				<%= select_tag 'status', users_status_options_for_select(@status), :class => "small", :onchange => "this.form.submit(); return false;"  %>
+
+				<% if @groups.present? %>
+				<label for='group_id'><%= l(:label_group) %>:</label>
+				<%= select_tag 'group_id', content_tag('option') + options_from_collection_for_select(@groups, :id, :name, params[:group_id].to_i), :onchange => "this.form.submit(); return false;"  %>
+				<% end %>
+
+				<label for='name'><%= l(:label_user) %>:</label>
+				<%= text_field_tag 'name', params[:name], :size => 30 %>
+				<%= submit_tag l(:button_apply), :class => "small", :name => "list" %>
+				<%= link_to l(:button_clear), {:controller => controller_name, :action => 'usrsettingsindex', :tab => 'payroll'}, :class => 'icon icon-reload' %>
+			</fieldset>
+		<%=h hidden_field_tag('tab', 'payroll') %>
+		<% end %>
+	&nbsp;
+	<% end %>
+	<div class="table-wrapper">
+		<table class="list time-entries">
+			<thead>
+				<tr>
+					<th><%= l(:field_user) %></th>
+					<% @salary_components.each do |compoment| %>
+						<th style="text-align: center;">
+							<label style="padding-right: 10px;"><%= compoment.name %></label>
+							<% if validateERPPermission('A_TE_PRVLG') %>
+								<a class="icon icon-edit" style="cursor: pointer;" id="<%= compoment.id %>" onClick=" bulk_edit('<%= compoment.id %>');" title="Edit"></a>
+							<% end %>
+						</th>
+					<% end %>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<% @payroll_entries.each do |entry| -%>
+					<tr class="time-entry <%= cycle("odd", "even") %> <%= entry.status == 3 ? "user locked" : "" %>" >
+						<th id="rowheader_<%=entry.user_id%>"><%=h entry.firstname + ' ' + entry.lastname%></th>
+						<% @salary_components.each do |compoment|
+							factor = compoment.factor
+							@user_salary_components.each do |user_compoment|
+								if user_compoment.user_id == entry.user_id && user_compoment.salary_component_id == compoment.id
+									factor = user_compoment.factor
+								end
+							end %>
+							<td class="rowcontent_<%=entry.user_id%>" style="text-align: center;" id="td_<%= compoment.id.to_s + '_' + entry.user_id.to_s %>"><%= factor %></td>
+						<% end %>
+						<td align="center">
+							<%= link_to image_tag('edit.png'), {:controller => controller.controller_name, :action => 'user_salary_settings', :user_id => entry.user_id, :tab => 'payroll'},
+															   :title => l(:button_edit) %>
+						</td>
+					</tr>
+				<% end -%>
+			</tbody>
+		</table>
+	</div>
+<% end -%>
